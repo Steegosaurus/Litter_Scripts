@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+//PlayerStateManager handles changing the player's state to what they are currently doing
 public class PlayerStateManager : MonoBehaviour
 {
     #region Components
@@ -19,6 +20,7 @@ public class PlayerStateManager : MonoBehaviour
     private float lockClock;
     #endregion
     #region Setting States
+    //Each of these staets represent what the player can be doing at a certain time
     public State playerRunning = new State(extended_box, player_run, extended_box_offset, extended_check_transform, extended_check_size);
     public State playerRunning_WA = new State(extended_box, player_run_WA, extended_box_offset, extended_check_transform, extended_check_size);
     public State playerIdle = new State(not_extended_box, player_idle, not_extended_box_offset, not_extended_check_transform, not_extended_check_size);
@@ -65,6 +67,7 @@ public class PlayerStateManager : MonoBehaviour
     private static Vector2 not_extended_check_transform = new Vector2(-0.01f, -0.72f);
     #endregion
     #region Setting Animations
+    //WA = With acorn
     private static string player_idle = "player_idle";
     private static string player_idle_WA = "player_idle_WA";
     private static string player_shooting = "player_shooting";
@@ -90,7 +93,6 @@ public class PlayerStateManager : MonoBehaviour
     private static string player_planting_acorn = "player_planting_acorn";
     private static string player_die = "player_die";
     private static string player_dead = "player_dead";
-
     private static string player_idle_to_running_WA = "player_idle_to_running_WA";
     private static string player_idle_to_throw_WA = "player_idle_to_throw_WA";
     private static string player_idle_to_shoot_WA = "player_idle_to_shoot_WA";
@@ -100,7 +102,7 @@ public class PlayerStateManager : MonoBehaviour
     private static string player_falling_to_holding_WA = "player_falling_to_holding_WA";
     #endregion
 
-    //All components of game object are initialized in Awake function
+    //Awake is called at the first frame of the object's existence; all components of game object are initialized
     void Awake(){
         playerAnimator = GetComponent<Animator>();
         playerHurtbox = GetComponent<BoxCollider2D>();
@@ -112,117 +114,72 @@ public class PlayerStateManager : MonoBehaviour
     }
 
     void Update(){
-        //We don't want to interrupt the jump or walljump animations once they have started
-
-        
         if(!StateLocked()){
             //If squirrel is on the ground
             if(playerMove.lastTimeOnGround > 0){
-                /*
-                if(playerMove.jumping){
-                    if(playerItem.holdingItem){
-                        ChangeState(playerJump_WA);
+                //If the squirrel is moving
+                if(playerRB.velocity.x > 0.01f || playerRB.velocity.x < -0.01f){
+                    //Assign the correct state to the player; pretty self-explanatory
+                    if(playerMove.skidding){
+                        if(playerItem.holdingItem){
+                            ChangeState(playerSkid_WA);
+                        }   
+                        else{ 
+                            ChangeState(playerSkid);
+                        }
                     }
                     else{
-                        ChangeState(playerJump);
+                        if(playerItem.holdingItem){
+                            if(currentState.playerAnimation == playerIdle_WA.playerAnimation){
+                                ChangeState(playerIdleToRunning_WA);
+                            }
+                            else if(currentState.playerAnimation != playerIdleToRunning_WA.playerAnimation){
+                                ChangeState(playerRunning_WA);
+                            }
+                        }   
+                        else{ 
+                            ChangeState(playerRunning);
+                        }
                     }
                 }
-                else{*/
-                    if(playerRB.velocity.x > 0.01f || playerRB.velocity.x < -0.01f){
-                        //If we are trying to stop, our squirrel skids
-                        if(playerMove.skidding){
-                            if(playerItem.holdingItem){
-                                ChangeState(playerSkid_WA);
-                            }   
-                            else{ 
-                                ChangeState(playerSkid);
+                //If the player isn't moving
+                else{
+                    //If the player isn't trying to move
+                    if(playerInput.actions["Move"].ReadValue<Vector2>().x == 0){
+                        //Assign the correct state to the player
+                        if(playerItem.holdingItem){
+                            if(currentState.playerAnimation == playerSkid_WA.playerAnimation){
+                                ChangeState(playerSkidToIdle_WA);
                             }
-                        }
-                        //If we are trying to run, our squirrel runs
-                        else{
-                            if(playerItem.holdingItem){
-                                if(currentState.playerAnimation == playerIdle_WA.playerAnimation){
-                                    ChangeState(playerIdleToRunning_WA);
-                                }
-                                else if(currentState.playerAnimation != playerIdleToRunning_WA.playerAnimation){
-                                    ChangeState(playerRunning_WA);
-                                }
-                            }   
-                            else{ 
-                                ChangeState(playerRunning);
+                            else if(currentState.playerAnimation != playerSkidToIdle_WA.playerAnimation){
+                                ChangeState(playerIdle_WA);
                             }
+                        }  
+                        else{ 
+                            ChangeState(playerIdle);
                         }
                     }
-                    else{
-                        //If we aren't trying to move and we aren't moving, our squirrel idles
-                        if(playerInput.actions["Move"].ReadValue<Vector2>().x == 0){
-                            if(playerItem.holdingItem){
-                                if(currentState.playerAnimation == playerSkid_WA.playerAnimation){
-                                    ChangeState(playerSkidToIdle_WA);
-                                }
-                                else if(currentState.playerAnimation != playerSkidToIdle_WA.playerAnimation){
-                                    ChangeState(playerIdle_WA);
-                                }
-                            }  
-                            else{ 
-                                ChangeState(playerIdle);
-                            }
-                        }
-                    }
-                //}
+                }
             }
+
             //If squirrel is in the air
-
-
-
-
-
-            else if(playerMove.lastTimeOnGround < 0){
-                /*if(playerAbilities.wallJumping){
-                    if(playerItem.holdingItem){
-                        ChangeState(playerWallJump_WA);
-                    }
-                    else{
-                        ChangeState(playerWallJump);
+            else if{
+                //If the player is clinging to a wall
+                if(playerAbilities.wallClinging){
+                    if(currentState.playerAnimation != player_cling && currentState.playerAnimation != player_wall_drag){
+                        ChangeState(playerClinging);
                     }
                 }
-                else{*/
-                    if(playerAbilities.wallClinging){
-                        if(currentState.playerAnimation != player_cling && currentState.playerAnimation != player_wall_drag){
-                            ChangeState(playerClinging);
-                        }
+                //If the player is dragging on a wall
+                else if(playerAbilities.wallDragging){
+                    if(currentState.playerAnimation != player_wall_drag){
+                        ChangeState(playerDrag);
                     }
-                    else if(playerAbilities.wallDragging){
-                        if(currentState.playerAnimation != player_wall_drag){
-                            ChangeState(playerDrag);
-                        }
-                    }
-                    
-                    else{
-                        if(playerRB.velocity.y < 0){
-                            if(playerItem.holdingItem){
-                                ChangeState(playerFalling_WA);
-                            }
-                            else{
-                                ChangeState(playerFalling);
-                            }
-                        }
-                        else{
-                            if(playerItem.holdingItem){
-                                ChangeState(playerRising_WA);
-                            }
-                            else{
-                                ChangeState(playerRising);
-                            }
-                        }
-                    }
-                //}
-            }
-        }
-        /*
-        else{
-            if(!playerMove.jumping && !playerMove.wallJumping){
-                if(playerRB.velocity.y < 0){
+                }
+                //If the player is not on a wall
+                else{
+                    //If the player is falling
+                    if(playerRB.velocity.y < 0){
                         if(playerItem.holdingItem){
                             ChangeState(playerFalling_WA);
                         }
@@ -230,6 +187,7 @@ public class PlayerStateManager : MonoBehaviour
                             ChangeState(playerFalling);
                         }
                     }
+                    //If the player is rising
                     else{
                         if(playerItem.holdingItem){
                             ChangeState(playerRising_WA);
@@ -238,115 +196,18 @@ public class PlayerStateManager : MonoBehaviour
                             ChangeState(playerRising);
                         }
                     }
-            }
-        }*/
-        
-        /*
-        if(!(playerAbilities.launching || playerAbilities.chargingLaunch)){
-            //If squirrel is on the ground
-            if(playerMove.lastTimeOnGround > 0){
-                if(playerMove.jumping){
-                    if(!(currentState.playerAnimation == player_jump || currentState.playerAnimation == player_jump_WA)){
-                        if(playerItem.holdingItem){
-                            ChangeState(playerJump_WA);
-                        }
-                        else{
-                            ChangeState(playerJump);
-                        }
-                    }
-                }
-                else{
-                    if(playerRB.velocity.x > 0.01f || playerRB.velocity.x < -0.01f){
-                        //If we are trying to stop, our squirrel skids
-                        if(playerInput.actions["Move"].ReadValue<Vector2>().x == 0 || (Mathf.Sign(playerInput.actions["Move"].ReadValue<Vector2>().x) != Mathf.Sign(playerRB.velocity.x))){
-                            if(playerItem.holdingItem){
-                                ChangeState(playerSkid_WA);
-                            }   
-                            else{ 
-                                ChangeState(playerSkid);
-                            }
-                        }
-                        //If we are trying to run, our squirrel runs
-                        else{
-                            if(playerItem.holdingItem){
-                                if(currentState.playerAnimation == playerIdle_WA.playerAnimation){
-                                    ChangeState(playerIdleToRunning_WA);
-                                }
-                                else if(currentState.playerAnimation != playerIdleToRunning_WA.playerAnimation){
-                                    ChangeState(playerRunning_WA);
-                                }
-                            }   
-                            else{ 
-                                ChangeState(playerRunning);
-                            }
-                        }
-                    }
-                    else{
-                        //If we aren't trying to move and we aren't moving, our squirrel idles
-                        if(playerInput.actions["Move"].ReadValue<Vector2>().x == 0){
-                            if(playerItem.holdingItem){
-                                if(currentState.playerAnimation == playerSkid_WA.playerAnimation){
-                                    ChangeState(playerSkidToIdle_WA);
-                                }
-                                else if(currentState.playerAnimation != playerSkidToIdle_WA.playerAnimation){
-                                    ChangeState(playerIdle_WA);
-                                }
-                            }  
-                            else{ 
-                                ChangeState(playerIdle);
-                            }
-                        }
-                    }
                 }
             }
-            //If squirrel is in the air
-            else if(playerMove.lastTimeOnGround < 0){
-                if(playerMove.wallJumping){
-
-                }
-                else{
-                    if(playerMove.wallClinging){
-                        if(currentState.playerAnimation != player_cling && currentState.playerAnimation != player_wall_drag){
-                            ChangeState(playerClinging);
-                        }
-                    }
-                    else if(playerMove.wallDragging){
-                        if(currentState.playerAnimation != player_wall_drag){
-                            ChangeState(playerDrag);
-                        }
-                    }
-                    
-                    else{
-                        if(playerRB.velocity.y < 0){
-                            if(playerItem.holdingItem){
-                                ChangeState(playerFalling_WA);
-                            }
-                            else{
-                                ChangeState(playerFalling);
-                            }
-                        }
-                        else{
-                            if(playerItem.holdingItem){
-                                ChangeState(playerRising_WA);
-                            }
-                            else{
-                                ChangeState(playerRising);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        */
-        
+        } 
     }
 
     //Changes the state of our player
     public void ChangeState(State newState){
         if(newState.playerBoxSize != currentState.playerBoxSize || newState.playerAnimation != currentState.playerAnimation || newState.playerBoxOffset != currentState.playerBoxOffset){
-            //Debug.Log(newState.playerAnimation);
+            //Change the animation, hurtbox, and ground check of our player
             ChangeAnimation(newState.playerAnimation);
             ChangeHurtbox(newState.playerBoxSize, newState.playerBoxOffset);
+            //Ground checks are the transform of the ground check object that is a child of the player
             ChangeGroundCheck(newState.playerGroundTransform, newState.playerGroundSize);
             currentState = newState;
         }
@@ -379,18 +240,8 @@ public class PlayerStateManager : MonoBehaviour
         playerMove.groundCheckSize = newGroundSize;
         
     }
-    //StateLocked returns true if the state we are in is considered "locked", if not it returns false
-    /*public bool StateLocked(){
-        return (currentState.playerAnimation == playerJump.playerAnimation || currentState.playerAnimation == playerJump_WA.playerAnimation 
-                || currentState.playerAnimation == playerWallJump.playerAnimation || currentState.playerAnimation == playerWallJump_WA.playerAnimation 
-                || currentState.playerAnimation == playerChargingLaunch.playerAnimation || currentState.playerAnimation == playerIdletoThrowing_WA.playerAnimation 
-                || currentState.playerAnimation == playerFallingtoThrowing_WA.playerAnimation || currentState.playerAnimation == playerFallingToHolding_WA.playerAnimation
-                || currentState.playerAnimation == playerFallingToShooting_WA.playerAnimation || currentState.playerAnimation == playerIdleToShooting_WA.playerAnimation
-                || currentState.playerAnimation == playerShooting.playerAnimation || currentState.playerAnimation == playerPlantingAcorn.playerAnimation
-                || currentState.playerAnimation == playerShooting.playerAnimation
-                );
-    }*/
 
+    //StateLocked returns true if the player is in an animation that we do not want to interrupt
     public bool StateLocked(){
         return(currentState.playerAnimation == playerChargingLaunch.playerAnimation || currentState.playerAnimation == playerIdletoThrowing_WA.playerAnimation 
                 || currentState.playerAnimation == playerFallingtoThrowing_WA.playerAnimation || currentState.playerAnimation == playerFallingToHolding_WA.playerAnimation
@@ -402,7 +253,7 @@ public class PlayerStateManager : MonoBehaviour
     }
     
     #region Animator Functions
-    //Called from animator; starts the falling animation (without acorn)
+    //StartFalling is called from animator; starts the falling animation
     public void StartFalling(){
         if(playerItem.holdingItem){
             ChangeState(playerFalling_WA);
@@ -410,8 +261,9 @@ public class PlayerStateManager : MonoBehaviour
         else{ 
             ChangeState(playerFalling);
         }
-        //ChangeState(playerFalling);
     }
+
+    //Need to test this, I don't think this ever gets called
     public void StartChargingLaunch(){
         ChangeState(playerChargingLaunch);
     }
@@ -429,8 +281,6 @@ public class PlayerStateManager : MonoBehaviour
     }
     //Is called whenever the player leaves a wall they have been clinging to
     public void EndWallCling(){
-        //Debug.Log("ending wall cling");
-
         ChangeState(playerDrag);
         playerAbilities.wallClinging = false;
         playerAbilities.wallDragging = true;

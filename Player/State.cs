@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//State is a struct that has all of the information the PlayerStateManager needs to understand what state the player is in.
+//It includes the hurtbox, the hurtbox offset from the center of the player, the animation, the ground check size, and the
+//offset of the ground check.
 public struct State
 {
     #region All the components that make up a state
@@ -18,6 +21,5 @@ public struct State
         playerBoxOffset = boxOff;
         playerGroundTransform = groundCheck;
         playerGroundSize = groundSize;
-        //playerGroundSize is wrong or something
     }
 }
